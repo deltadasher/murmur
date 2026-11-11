@@ -1,0 +1,8 @@
+/build*/
+/bin/
+/repo-flatpak/
+/.flatpak-builder/
+*.flatpak
+*.pkg.tar.*
+__pycache__/
+*.py[cod]

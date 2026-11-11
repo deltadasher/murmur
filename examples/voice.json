@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "bass": 3,
+  "mid": 0,
+  "treble": 2,
+  "bassHz": 180,
+  "midHz": 1200,
+  "trebleHz": 4500,
+  "rate": 48000,
+  "bits": 24,
+  "pitch": 0,
+  "mix": 100,
+  "gain": -4
+}

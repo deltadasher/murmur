@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+murmur_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+if [[ -x "$murmur_root/bin/murmur" && -x "$murmur_root/bin/murmur-daemon" ]]; then
+    exec "$murmur_root/bin/murmur" "$@"
+fi
+cmake -S "$murmur_root" -B "$murmur_root/build" -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build "$murmur_root/build" --parallel
+exec "$murmur_root/build/murmur" "$@"

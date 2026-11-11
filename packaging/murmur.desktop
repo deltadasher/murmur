@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Murmur
+Comment=Shape your voice while audio runs in the background
+Exec=murmur
+Icon=murmur
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Mixer;
+Keywords=microphone;voice;equalizer;pipewire;

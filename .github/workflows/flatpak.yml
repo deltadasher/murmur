@@ -1,0 +1,33 @@
+name: Developer Flatpak
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flatpak:
+    # 22.04 avoids the restricted unprivileged-user-namespace policy on newer
+    # runners. The application's compiler and Qt come from the Flatpak SDK.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Prepare Flatpak SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub org.kde.Platform//6.10 org.kde.Sdk//6.10
+      - name: Build and test in the sandbox
+        run: flatpak-builder --user --force-clean --repo=repo-flatpak build-flatpak packaging/io.github.murmur_voice.Murmur.json
+      - name: Export developer bundle
+        run: flatpak build-bundle repo-flatpak murmur-development.flatpak io.github.murmur_voice.Murmur master --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: murmur-development-flatpak
+          path: murmur-development.flatpak
+          if-no-files-found: error
+          retention-days: 14

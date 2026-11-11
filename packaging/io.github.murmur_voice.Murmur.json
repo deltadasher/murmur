@@ -1,0 +1,82 @@
+{
+    "app-id": "io.github.murmur_voice.Murmur",
+    "runtime": "org.kde.Platform",
+    "runtime-version": "6.10",
+    "sdk": "org.kde.Sdk",
+    "command": "murmur",
+    "rename-desktop-file": "murmur.desktop",
+    "rename-icon": "murmur",
+    "finish-args": [
+        "--share=ipc",
+        "--socket=wayland",
+        "--socket=fallback-x11",
+        "--device=dri",
+        "--filesystem=xdg-run/pipewire-0:ro",
+        "--env=MURMUR_NO_SYSTEMD=1"
+    ],
+    "modules": [
+        {
+            "name": "dbus-test-tools",
+            "buildsystem": "meson",
+            "config-opts": [
+                "-Dmessage_bus=true",
+                "-Dtools=true",
+                "-Dmodular_tests=disabled",
+                "-Dintrusive_tests=false",
+                "-Dinstalled_tests=false",
+                "-Dsystemd=disabled",
+                "-Dselinux=disabled",
+                "-Dapparmor=disabled",
+                "-Dlibaudit=disabled",
+                "-Ddoxygen_docs=disabled",
+                "-Dducktype_docs=disabled",
+                "-Dxml_docs=disabled",
+                "-Dqt_help=disabled",
+                "-Dx11_autolaunch=disabled"
+            ],
+            "cleanup": [
+                "*"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://dbus.freedesktop.org/releases/dbus/dbus-1.16.2.tar.xz",
+                    "sha256": "0ba2a1a4b16afe7bceb2c07e9ce99a8c2c3508e5dec290dbb643384bd6beb7e2"
+                }
+            ]
+        },
+        {
+            "name": "murmur",
+            "buildsystem": "cmake-ninja",
+            "builddir": true,
+            "run-tests": true,
+            "test-rule": "",
+            "test-commands": [
+                "ctest --output-on-failure"
+            ],
+            "license-files": [
+                "LICENSE"
+            ],
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DBUILD_TESTING=ON",
+                "-DMURMUR_FLATPAK=ON"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "..",
+                    "skip": [
+                        ".git",
+                        ".flatpak-builder",
+                        "build",
+                        "build-flatpak",
+                        "repo-flatpak",
+                        "bin",
+                        "__pycache__"
+                    ]
+                }
+            ]
+        }
+    ]
+}

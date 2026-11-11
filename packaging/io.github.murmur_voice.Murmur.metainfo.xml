@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 Murmur contributors; metadata licensed CC0-1.0. -->
+<!-- Provisional local-build identity. Choose an owned ID before publication. -->
+<component type="desktop-application">
+  <id>io.github.murmur_voice.Murmur</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Murmur</name>
+  <summary>Shape your microphone for games and voice chat</summary>
+  <developer id="io.github.murmur_voice">
+    <name>Murmur contributors</name>
+  </developer>
+  <description>
+    <p>Murmur is a real-time microphone processor for Linux. Choose a microphone,
+    shape your voice with clearly labelled controls, and select Murmur Virtual
+    Microphone in your game or voice-chat application.</p>
+    <p>Adjust tone, pitch, digital texture and dynamics. Save voice presets,
+    compare the original signal with effects bypassed, and preview changes
+    through headphones. With desktop background access granted, the audio
+    service continues after you close the window. If access is denied, keep the
+    window open. Processing can be stopped explicitly from the application.</p>
+    <p>Murmur uses PipeWire and supports both Wayland and X11 desktops.
+    It processes audio locally without a cloud account.</p>
+  </description>
+  <launchable type="desktop-id">io.github.murmur_voice.Murmur.desktop</launchable>
+  <provides>
+    <binary>murmur</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <recommends>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <display_length compare="ge">720</display_length>
+  </recommends>
+  <releases>
+    <release version="0.3.0" date="2026-10-01">
+      <description>
+        <p>Organised voice controls, additional dynamics and creative effects,
+        and preparation for portable desktop packaging.</p>
+      </description>
+    </release>
+  </releases>
+</component>

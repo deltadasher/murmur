@@ -1,0 +1,53 @@
+name: Native checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  arch:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    timeout-minutes: 20
+    steps:
+      - name: Install build and validation tools
+        run: pacman -Syu --noconfirm --needed git cmake ninja qt6-base qt6-wayland pipewire pipewire-pulse wireplumber libpulse dbus python appstream desktop-file-utils noto-fonts
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Configure and build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+          cmake --build build --parallel 2
+      - name: Unit and native UI tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Packaging checks
+        run: |
+          python packaging/validate.py
+          desktop-file-validate packaging/murmur.desktop
+          # No publisher URL exists yet. Keep its notice visible without
+          # failing developer CI; remove this exception before publication.
+          appstreamcli validate --no-net --override=url-homepage-missing=info packaging/io.github.murmur_voice.Murmur.metainfo.xml
+      - name: Isolated synthetic audio integration
+        run: |
+          useradd --create-home audio-check
+          install -d -o audio-check -g audio-check /tmp/murmur-audio-check
+          runuser -u audio-check -- dbus-run-session -- python tests/integration.py build /tmp/murmur-audio-check
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: native-validation
+          path: |
+            build/Testing/Temporary/LastTest.log
+            /tmp/murmur-audio-check/*.json
+            /tmp/murmur-audio-check/*.log
+          if-no-files-found: ignore
+          retention-days: 14

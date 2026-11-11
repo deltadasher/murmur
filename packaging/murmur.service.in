@@ -1,0 +1,17 @@
+[Unit]
+Description=Murmur background voice processor
+After=pipewire.service wireplumber.service
+Wants=pipewire.service
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/murmur-daemon
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=5
+UMask=0077
+
+[Install]
+WantedBy=default.target

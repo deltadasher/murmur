@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible audio, service or interface problem.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the expected behavior and minimal reproduction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Murmur version, distribution, native/Flatpak install, Wayland/X11, and Qt/PipeWire/WirePlumber versions.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant evidence
+      description: Screenshots or short redacted logs help. Real voice recordings are usually unnecessary. Read SECURITY.md before sharing security-sensitive information.
