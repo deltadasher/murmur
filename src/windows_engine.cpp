@@ -4,6 +4,13 @@
 #include <cstring>
 
 namespace {
+bool fatalAudioError(QtAudio::Error error) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 12, 0)
+    return error!=QtAudio::NoError && error!=QtAudio::UnderrunError;
+#else
+    return error!=QtAudio::NoError;
+#endif
+}
 QString deviceKey(const QAudioDevice& d) { return QString::fromLatin1(d.id().toHex()); }
 QAudioFormat formatFor(const QAudioDevice& device) {
     QAudioFormat f; f.setSampleRate(48000); f.setSampleFormat(QAudioFormat::Float);
@@ -42,7 +49,7 @@ bool Engine::start(const QString& source,bool monitor) {
     stop();
     QAudioDevice input, cable;
     for(const auto& d:inputs) if(deviceKey(d)==source) input=d;
-    for(const auto& d:QMediaDevices::audioOutputs()) if(d.description().contains("CABLE Input",Qt::CaseInsensitive)) { cable=d; break; }
+    for(const auto& d:QMediaDevices::audioOutputs()) if(d.description().contains("CABLE Input",Qt::CaseInsensitive) && d.description().contains("VB-Audio",Qt::CaseInsensitive)) { cable=d; break; }
     if(input.isNull()) { emit failed("Select an available microphone first."); return false; }
     if(cable.isNull()) { emit failed("VB-CABLE was not found. Install it, then restart Murmur."); return false; }
     inputFormat=formatFor(input); outputFormat=formatFor(cable);
@@ -59,7 +66,7 @@ bool Engine::start(const QString& source,bool monitor) {
     if(!outputIO||!captureIO||(monitor&&!previewIO) || capture->error()!=QtAudio::NoError || output->error()!=QtAudio::NoError || (preview && preview->error()!=QtAudio::NoError)) { stop(); emit failed("Could not start the audio devices. Check microphone permissions and the cable."); return false; }
     active=true;
     auto reportError=[this] { QTimer::singleShot(0,this,[this] {
-        if(active && ((capture && capture->error()!=QtAudio::NoError) || (output && output->error()!=QtAudio::NoError && output->error()!=QtAudio::UnderrunError) || (preview && preview->error()!=QtAudio::NoError && preview->error()!=QtAudio::UnderrunError))) {
+        if(active && ((capture && capture->error()!=QtAudio::NoError) || (output && fatalAudioError(output->error())) || (preview && fatalAudioError(preview->error())))) {
             stop(); emit failed("An audio device stopped unexpectedly. Check your microphone and VB-CABLE, then start again.");
         }
     }); };

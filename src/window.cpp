@@ -26,6 +26,11 @@
 #include <optional>
 
 namespace {
+#ifdef Q_OS_WIN
+const QString appInputName=QStringLiteral("CABLE Output");
+#else
+const QString appInputName=QStringLiteral("Murmur Virtual Microphone");
+#endif
 class ModuleTabBar : public QTabBar {
 protected:
     void paintEvent(QPaintEvent* event) override {
@@ -312,7 +317,7 @@ Window::Window(Client& connection,bool demo):client(connection),demonstration(de
     routing=new QGridLayout;routing->setHorizontalSpacing(16);routing->setVerticalSpacing(6);routing->setColumnStretch(0,5);routing->setColumnStretch(2,4);
     routing->addWidget(text("Microphone","hint"),0,0);routing->addWidget(text("Your input in other apps","hint"),0,2);
     microphone=new QComboBox;microphone->setObjectName("microphone");microphone->setAccessibleName("Microphone input");microphone->setMinimumWidth(150);microphone->setMaximumWidth(560);
-    microphone->setToolTip("Select your physical microphone. Your processed voice appears as Murmur Virtual Microphone in other applications.");routing->addWidget(microphone,1,0);
+    microphone->setToolTip("Select your physical microphone. Choose "+appInputName+" in other applications.");routing->addWidget(microphone,1,0);
     auto* arrow=text("→","hint");arrow->setFixedWidth(18);arrow->setAlignment(Qt::AlignCenter);routing->addWidget(arrow,1,1);
 #ifdef Q_OS_WIN
     outputLabel=text("CABLE Output (VB-CABLE)","controlTitle");
@@ -501,7 +506,7 @@ void Window::refreshStart() {
     startButton->setEnabled(!demonstration&&(!connected||requested||running||starting||(ready&&microphone->count()>0)));
     microphone->setEnabled(!demonstration&&connected&&!requested&&!running&&!starting&&microphone->count()>0);
     if(!demonstration){service->setText(!connected ? "○  Service offline":running ? (systemMuteKnown&&systemMuted ? "●  System input muted":params.mute ? "●  Microphone muted":params.bypass ? "●  Effects bypassed":"●  Microphone active"):starting ? "●  Connecting":requested ? "○  Waiting for microphone":"●  Background service ready");service->setStyleSheet(!connected ? "color:#b4b6aa;":systemMuteKnown&&systemMuted ? "color:#e6ad66;":"color:#a6c29e;");}
-    microphone->setToolTip(running||requested||starting ? "Stop the microphone to choose another input.":"Select your physical microphone. Your processed voice appears as Murmur Virtual Microphone in other applications.");
+    microphone->setToolTip(running||requested||starting ? "Stop the microphone to choose another input.":"Select your physical microphone. Choose "+appInputName+" in other applications.");
     systemWarning->setVisible(!demonstration&&connected&&systemMuteKnown&&systemMuted);unmuteSystem->setEnabled(connected&&!demonstration);
     updateToneDensity();
     for(auto& [name,button]:presetButtons){Q_UNUSED(name);button->setEnabled(demonstration||connected);}
@@ -570,13 +575,12 @@ void Window::saveFile() {
     auto path=QFileDialog::getSaveFileName(this,"Export Murmur preset","my-voice.json","Murmur preset (*.json)");if(path.isEmpty())return;if(!path.endsWith(".json"))path+=".json";QString error;if(!writeParameters(path,params,error))QMessageBox::warning(this,"Preset not saved",error);
 }
 void Window::showHelp() {
-    QMessageBox::information(this,"Your voice, your controls",QString::fromUtf8(
-        "1. Choose your physical microphone and start it.\n2. In Discord, OBS or your calling app, choose Murmur Virtual Microphone.\n\n"
+    QMessageBox::information(this,"Your voice, your controls",QString("1. Choose your physical microphone and start it.\n2. In Discord, OBS or your calling app, choose %1.\n\n").arg(appInputName)+QString::fromUtf8(
         "Tone: Bass adds body, Middle changes speech presence, Treble adds clarity. The small frequency controls choose where each band acts.\n\n"
         "Character: Pitch lowers or raises your voice. Drive adds saturation. Sample rate reduces detail without slowing speech; bit depth adds digital grit. These effects do not change hardware format.\n\n"
         "Cleanup: Low cut removes rumble, Noise gate quiets pauses, and Compression evens out speech. The gate is not noise cancellation. Compression does not add automatic gain.\n\n"
         "Space: Echo mixes in a delayed voice. Echo delay sets the repeat timing.\n\n"
         "Effect mix blends the original and processed voice. Output level adjusts the final volume. The clipping guard helps keep boosted audio under control.\n\n"
         "Hear myself sends your processed voice to your default output. Use headphones.\n\n"
-        "Murmur’s background service starts when you open the app. Native audio continues when the window closes. Flatpak needs desktop background permission; keep the window open if the status asks you to. Stop microphone removes the virtual input; Stop background service in the menu shuts the worker down. Murmur does not start at login."));
+        "Murmur’s background service starts when you open the app. Native audio continues when the window closes. Flatpak needs desktop background permission; keep the window open if the status asks you to. Stop microphone ends processing; Stop background service in the menu shuts the worker down. Murmur does not start at login."));
 }

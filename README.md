@@ -1,11 +1,11 @@
 # Murmur
 
 Murmur lets you change how your microphone sounds in Discord, OBS, or games.
-Pick **Murmur Virtual Microphone** as your input after starting it. The audio
-keeps running in the background when you close the window.
+Pick **Murmur Virtual Microphone** on Linux or **CABLE Output** on Windows as
+your input after starting it. Audio keeps running when you close the window.
 
-Right now, Murmur supports Linux with PipeWire and WirePlumber. It works with
-Wayland and X11. Version **0.3.0** adds four effect sections and six controls.
+Murmur supports Linux with PipeWire and WirePlumber on Wayland and X11.
+Windows support is experimental. Version **0.3.0** adds four effect sections and six controls.
 
 ![Murmur voice console](docs/screenshots/voice-console.png)
 
@@ -17,7 +17,8 @@ Windows support is in development and has not yet been tested with a real microp
 It needs [VB-CABLE](https://vb-audio.com/Cable/) installed separately. After installing
 and rebooting, start Murmur, select your microphone, and choose **CABLE Output** as
 the input in Discord, OBS, or your game. Murmur sends audio to **CABLE Input**.
-Don't set the cable as your default speakers. Both your microphone and the cable
+Don't set the cable as your default speakers or send other apps to it: anything
+sent to the cable can be heard by apps using CABLE Output. Both your microphone and the cable
 need to support 48 kHz float audio. The Windows build is available as a GitHub
 Actions artifact when the Windows build succeeds. System mute control is not
 available on Windows.

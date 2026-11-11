@@ -48,7 +48,7 @@ int main(int argc,char** argv) {
     parser.addOption({"stop","Stop the virtual microphone and remember that it is stopped."});
     parser.addOption({"quit-daemon","Stop audio and shut down the background service."});
     parser.addOption({"headless","Alias for --start."});
-    parser.addOption({"source","Microphone PipeWire node.name.","node"});
+    parser.addOption({"source","Microphone device identifier from --list-devices.","node"});
     parser.addOption({"preset","Built-in name or JSON preset path.","preset"});
     parser.addOption({"set","Set one control, for example bits=8 or mute=true; repeatable.","key=value"});
     parser.addOption({"monitor","Enable headphone preview when starting the microphone."});
