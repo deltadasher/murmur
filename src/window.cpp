@@ -114,7 +114,7 @@ QFrame* rule(Qt::Orientation orientation=Qt::Horizontal) {
 class PresetButton : public QPushButton {
 public:
     PresetButton(const QString& name,const QString& description):QPushButton(name),detail(description) {
-        setCheckable(true);setFixedHeight(48);setAccessibleName(name+" preset");setAccessibleDescription(description);setToolTip(description);
+        setCheckable(true);setFixedHeight(36);setAccessibleName(name+" preset");setAccessibleDescription(description);setToolTip(description);
         setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
     }
     void paintEvent(QPaintEvent*) override {
@@ -122,8 +122,7 @@ public:
         if(isChecked()||underMouse()||isDown())p.fillRect(rect(),QColor(isChecked()?"#302b22":"#24271f"));
         if(isChecked())p.fillRect(QRect(0,10,3,height()-20),QColor("#e6ad66"));
         QFont f=font();f.setPixelSize(14);f.setWeight(QFont::DemiBold);p.setFont(f);
-        p.setPen(QColor(!isEnabled()?"#797d72":isChecked()?"#e6ad66":"#efece4"));p.drawText(QRect(16,3,width()-24,23),Qt::AlignLeft|Qt::AlignVCenter,text());
-        f.setPixelSize(12);f.setWeight(QFont::Normal);p.setFont(f);p.setPen(QColor(isEnabled()?"#b4b6aa":"#797d72"));p.drawText(QRect(16,25,width()-24,20),Qt::AlignLeft|Qt::AlignVCenter,detail);
+        p.setPen(QColor(!isEnabled()?"#797d72":isChecked()?"#e6ad66":"#efece4"));p.drawText(QRect(16,0,width()-24,height()),Qt::AlignLeft|Qt::AlignVCenter,text());
         if(hasFocus()){p.setPen(QPen(QColor("#e6ad66"),1,Qt::DashLine));p.setBrush(Qt::NoBrush);p.drawRect(rect().adjusted(2,2,-3,-3));}
     }
 private:
@@ -411,13 +410,13 @@ Window::Window(Client& connection,bool demo):client(connection),demonstration(de
     connect(bypass,&QCheckBox::toggled,this,[this](bool enabled){if(!syncing){params.bypass=enabled;plot->parameters=params;plot->update();echoPlot->parameters=params;echoPlot->update();refreshStart();if(!demonstration)client.command("set",{{"parameters",QJsonObject{{"bypass",enabled}}}});}});
     connect(preview,&QCheckBox::toggled,this,[this](bool enabled){if(!syncing&&!demonstration&&connected)client.command("monitor",{{"enabled",enabled}});});
     if (!demo) {
-        connect(&client,&Client::connectionChanged,this,[this](bool live){connected=live; if(!live){running=false;ready=false;requested=false;starting=false;inputMeter->setLevel(-60);outputMeter->setLevel(-60);state->setText("Background service is offline. Start service to reconnect.");state->setStyleSheet("");}refreshStart();});
+        connect(&client,&Client::connectionChanged,this,[this](bool live){connected=live; if(!live){running=false;ready=false;requested=false;starting=false;inputMeter->setLevel(-60);outputMeter->setLevel(-60);state->setText("Background service is offline. Start service to reconnect.");state->show();state->setStyleSheet("");}refreshStart();});
         connect(&client,&Client::stateReceived,this,&Window::receiveState);
         connect(&client,&Client::metersReceived,this,[this](float in,float out,bool limited){if(!running){inputMeter->setLevel(-60);outputMeter->setLevel(-60);return;}inputMeter->setLevel(in);outputMeter->setLevel(out);guard->setText(limited ? "Guard active · lower output":"Clipping guard ready");guard->setStyleSheet(limited ? "color:#e6ad66;":"");});
-        connect(&client,&Client::problem,this,[this](const QString& error){state->setText(error);state->setStyleSheet("color:#e7a496;");});
+        connect(&client,&Client::problem,this,[this](const QString& error){state->setText(error);state->show();state->setStyleSheet("color:#e7a496;");});
     } else {
         microphone->addItem("Studio microphone · example","example"); running=true;ready=true;connected=true;
-        state->setText("Choose Murmur Virtual Microphone in Discord, OBS or your calling app."); inputMeter->setLevel(-18.4f); outputMeter->setLevel(-21.2f);
+        state->hide(); inputMeter->setLevel(-18.4f); outputMeter->setLevel(-21.2f);
         footerNote->setText("Example settings and levels. No microphone is connected.");
     }
     QWidget* previous=microphone;
@@ -485,6 +484,7 @@ void Window::receiveState(const QJsonObject& snapshot) {
     {QSignalBlocker block(preview);preview->setChecked(snapshot.value("monitor").toBool());}
     const QString failure=snapshot.value("error").toString();
     state->setStyleSheet(failure.isEmpty() ? "":"color:#e7a496;");
+    state->setVisible(!failure.isEmpty() || starting || (requested&&!running) || !ready || microphone->count()==0);
     state->setText(!failure.isEmpty() ? failure:running ? "Choose Murmur Virtual Microphone as the input in your calling app.":starting ? "Connecting your microphone…":requested ? "Waiting for the selected microphone. You can stop this request at any time.":!ready ? "Waiting for PipeWire. Start your audio session to continue.":microphone->count()==0 ? "No input microphones found. Connect a microphone to begin.":"Ready when you are. Start the microphone, then select the Murmur input in your app.");
     if(!running){inputMeter->setLevel(-60);outputMeter->setLevel(-60);}syncPresetSelection();refreshStart();
 }
@@ -522,21 +522,21 @@ void Window::resizeEvent(QResizeEvent* event) {
     const bool compact=width()<920;
     narrow=compact;presetRail->setVisible(!compact);divider->setVisible(!compact);compactPresets->setVisible(compact);
     const bool small=width()<820;
-    productLabel->setVisible(!small);presetHint->setVisible(!small);headphonesHint->setVisible(!small);toggles->setSpacing(small?16:24);
+    productLabel->hide();presetHint->hide();headphonesHint->setVisible(!small);toggles->setSpacing(small?16:24);
     routing->removeWidget(startButton);routing->removeWidget(state);
     if(small){routing->addWidget(startButton,2,2);routing->addWidget(state,2,0,1,2);}
     else{routing->addWidget(startButton,1,3);routing->addWidget(state,2,0,1,4);}
     outer->setContentsMargins(small?16:24,small?12:20,small?16:24,small?12:16);outer->setSpacing(8);workspace->setSpacing(compact?0:24);
-    toneTitle->setVisible(false);toneGuide->setVisible(!compact);textureNote->setVisible(!compact);
+    toneTitle->setVisible(false);toneGuide->hide();textureNote->hide();
     for(const auto& name:QStringList{"texture","cleanup","space"}){
         QWidget* page=name=="texture"?texture:name=="cleanup"?cleanup:space;
         page->findChild<QLabel*>(name+"Heading")->setVisible(!compact);
-        page->findChild<QLabel*>(name+"Guide")->setVisible(!(compact&&height()<760));
+        page->findChild<QLabel*>(name+"Guide")->hide();
         if(auto* layout=qobject_cast<QVBoxLayout*>(page->layout()))layout->setSpacing(compact?10:20);
         auto* grid=moduleGrids[name];grid->setHorizontalSpacing(36);grid->setVerticalSpacing(compact?12:28);
         int i=0;for(const auto& key:moduleKeys[name]){
             auto* control=values[key]->parentWidget();grid->removeWidget(control);grid->addWidget(control,compact||name=="cleanup"?i:i/2,compact||name=="cleanup"?0:i%2);++i;
-            if(auto* hint=control->findChild<QLabel*>("hint"))hint->setVisible(!(compact&&height()<760));
+            if(auto* hint=control->findChild<QLabel*>("hint"))hint->hide();
             auto* layout=qobject_cast<QVBoxLayout*>(control->layout());auto* row=parameterRows[key];auto* slider=sliders[key];
             layout->removeWidget(slider);row->removeWidget(slider);
             if(compact||name=="cleanup")row->insertWidget(1,slider,1);else layout->insertWidget(1,slider);
@@ -552,7 +552,7 @@ void Window::resizeEvent(QResizeEvent* event) {
         auto* control=faderWidgets[key];control->setMinimumHeight(compact?36:0);auto* layout=qobject_cast<QVBoxLayout*>(control->layout());auto* slider=sliders[key];
         layout->setDirection(compact?QBoxLayout::LeftToRight:QBoxLayout::TopToBottom);layout->setContentsMargins(compact?0:8,0,compact?0:8,0);layout->setSpacing(8);
         auto* title=control->findChild<QLabel*>(key+"Title");title->setMinimumWidth(compact?54:0);title->setMaximumWidth(compact?54:16777215);title->setAlignment(compact?Qt::AlignLeft|Qt::AlignVCenter:Qt::AlignCenter);
-        control->findChild<QLabel*>(key+"Hint")->setVisible(!compact);control->findChild<QWidget*>(key+"Scale")->setVisible(!compact);
+        control->findChild<QLabel*>(key+"Hint")->hide();control->findChild<QWidget*>(key+"Scale")->setVisible(!compact);
         slider->setOrientation(compact?Qt::Horizontal:Qt::Vertical);slider->setMinimumWidth(compact?40:35);slider->setMaximumWidth(compact?16777215:35);slider->setMinimumHeight(compact?26:130);slider->setMaximumHeight(compact?26:300);slider->setSizePolicy(compact?QSizePolicy::Expanding:QSizePolicy::Fixed,compact?QSizePolicy::Fixed:QSizePolicy::Expanding);
         faderRows[key]->setStretch(2,compact?1:0);values[key]->setMinimumWidth(102);values[key]->setMaximumWidth(compact?108:126);
     }

@@ -25,6 +25,12 @@ QJsonObject state(murmur::Parameters params={},bool running=true) {
 class UiTests : public QObject {
     Q_OBJECT
 private slots:
+    void descriptionsAreNotDisplayed() {
+        Client client; Window window(client,true); window.resize(1100,800); window.show(); QTest::qWait(30);
+        for (auto* label : window.findChildren<QLabel*>()) {
+            if (label->text().contains("Choose Murmur Virtual Microphone") || label->text().contains("Your voice. Your character.") || label->text().contains("Change how your voice feels")) QVERIFY(!label->isVisible());
+        }
+    }
     void modulesSupportKeyboardNavigation() {
         Client client;Window window(client,true);window.show();QTest::qWait(30);
         auto* tabs=window.findChild<QTabWidget*>("compactTabs");QVERIFY(tabs);
