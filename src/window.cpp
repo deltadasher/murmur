@@ -305,7 +305,7 @@ Window::Window(Client& connection,bool demo):client(connection),demonstration(de
     service=text(demo ? "Example view · no audio":"Connecting to background service…","status");service->setObjectName("status");header->addWidget(service);
     auto* menuButton=new QToolButton;menuButton->setText("⋯");menuButton->setObjectName("menu");menuButton->setAccessibleName("Application menu");
     auto* menu=new QMenu(menuButton);auto* importPreset=menu->addAction("Import preset…",this,[this]{auto path=QFileDialog::getOpenFileName(this,"Import Murmur preset",{},"Murmur preset (*.json)");if(!path.isEmpty())loadFile(path);});importPreset->setObjectName("importPreset");
-    menu->addAction("Export preset…",this,&Window::saveFile);menu->addSeparator();menu->addAction("How Murmur works",this,&Window::showHelp);menu->addAction("About Murmur",this,[this]{QMessageBox::about(this,"About Murmur",QString("Murmur %1\nNative voice controls for Linux\n\nShape your microphone for games, calls and streaming.\n\nReleased under the MIT License.").arg(QApplication::applicationVersion()));});menu->addSeparator();
+    menu->addAction("Export preset…",this,&Window::saveFile);menu->addSeparator();menu->addAction("How Murmur works",this,&Window::showHelp);menu->addAction("About Murmur",this,[this]{QMessageBox::about(this,"About Murmur",QString("Murmur %1\nVoice controls for games and calls\n\nShape your microphone for games, calls and streaming.\n\nReleased under the MIT License.").arg(QApplication::applicationVersion()));});menu->addSeparator();
     auto* stopService=menu->addAction("Stop background service",this,[this]{if(!demonstration)client.command("shutdown");});stopService->setObjectName("stopService");stopService->setEnabled(!demo);
     menuButton->setMenu(menu);menuButton->setPopupMode(QToolButton::InstantPopup);header->addWidget(menuButton);outer->addLayout(header);outer->addWidget(rule());
 
@@ -314,7 +314,12 @@ Window::Window(Client& connection,bool demo):client(connection),demonstration(de
     microphone=new QComboBox;microphone->setObjectName("microphone");microphone->setAccessibleName("Microphone input");microphone->setMinimumWidth(150);microphone->setMaximumWidth(560);
     microphone->setToolTip("Select your physical microphone. Your processed voice appears as Murmur Virtual Microphone in other applications.");routing->addWidget(microphone,1,0);
     auto* arrow=text("→","hint");arrow->setFixedWidth(18);arrow->setAlignment(Qt::AlignCenter);routing->addWidget(arrow,1,1);
-    outputLabel=text("Murmur Virtual Microphone","controlTitle");outputLabel->setWordWrap(true);outputLabel->setToolTip("Choose this input device in Discord, OBS or your calling app.");routing->addWidget(outputLabel,1,2);
+#ifdef Q_OS_WIN
+    outputLabel=text("CABLE Output (VB-CABLE)","controlTitle");
+#else
+    outputLabel=text("Murmur Virtual Microphone","controlTitle");
+#endif
+    outputLabel->setWordWrap(true);outputLabel->setToolTip("Choose this input device in Discord, OBS or your calling app.");routing->addWidget(outputLabel,1,2);
     startButton=new QPushButton("Start microphone");startButton->setObjectName("primary");startButton->setMinimumWidth(168);startButton->setAccessibleName("Start or stop virtual microphone");routing->addWidget(startButton,1,3);
     state=text("Start your microphone, then choose the Murmur input in your calling app.","hint");state->setWordWrap(true);routing->addWidget(state,2,0,1,4);outer->addLayout(routing);
     systemWarning=new QWidget;systemWarning->setObjectName("systemMuteWarning");auto* warningLayout=new QHBoxLayout(systemWarning);warningLayout->setContentsMargins(0,4,0,4);warningLayout->setSpacing(12);
@@ -485,7 +490,7 @@ void Window::receiveState(const QJsonObject& snapshot) {
     const QString failure=snapshot.value("error").toString();
     state->setStyleSheet(failure.isEmpty() ? "":"color:#e7a496;");
     state->setVisible(!failure.isEmpty() || starting || (requested&&!running) || !ready || microphone->count()==0);
-    state->setText(!failure.isEmpty() ? failure:running ? "Choose Murmur Virtual Microphone as the input in your calling app.":starting ? "Connecting your microphone…":requested ? "Waiting for the selected microphone. You can stop this request at any time.":!ready ? "Waiting for PipeWire. Start your audio session to continue.":microphone->count()==0 ? "No input microphones found. Connect a microphone to begin.":"Ready when you are. Start the microphone, then select the Murmur input in your app.");
+    state->setText(!failure.isEmpty() ? failure:running ? "Choose Murmur Virtual Microphone as the input in your calling app.":starting ? "Connecting your microphone…":requested ? "Waiting for the selected microphone. You can stop this request at any time.":!ready ? "Waiting for audio devices.":microphone->count()==0 ? "No input microphones found. Connect a microphone to begin.":"Ready when you are. Start the microphone, then select the Murmur input in your app.");
     if(!running){inputMeter->setLevel(-60);outputMeter->setLevel(-60);}syncPresetSelection();refreshStart();
 }
 void Window::refreshStart() {

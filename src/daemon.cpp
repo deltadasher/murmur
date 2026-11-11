@@ -9,10 +9,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#ifndef Q_OS_WIN
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 
 Daemon::Daemon(QObject* parent):QObject(parent) {
     connect(&background,&BackgroundPortal::changed,this,[this]{broadcast();});
@@ -53,12 +55,23 @@ Daemon::~Daemon() {
     // destruction happens after member destruction otherwise.
     for (auto* socket:std::as_const(clients)) { disconnect(socket,nullptr,this,nullptr); delete socket; }
     clients.clear(); server.close();
+#ifndef Q_OS_WIN
     if(lockFd>=0)close(lockFd);
+#endif
 }
 bool Daemon::listen() {
+#ifdef Q_OS_WIN
+    const QString dir=QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/murmur";
+#else
     const QString dir=QFileInfo(controlSocketPath()).absolutePath();
+#endif
     if (!QDir().mkpath(dir)) { std::fprintf(stderr,"Could not create the runtime directory.\n"); return false; }
     QFile::setPermissions(dir,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner);
+#ifdef Q_OS_WIN
+    lock=std::make_unique<QLockFile>(dir+"/daemon.lock");
+    lock->setStaleLockTime(0);
+    if(!lock->tryLock()) { std::fprintf(stderr,"Murmur daemon is already running, or its lock is unavailable.\n"); return false; }
+#else
     // Kernel locks work across Flatpak PID namespaces and release on crashes.
     // Keep the inode in place: unlinking it would allow a second independent lock.
     const auto path=QFile::encodeName(dir+"/daemon.lock");
@@ -68,6 +81,7 @@ bool Daemon::listen() {
         std::fprintf(stderr,"Murmur daemon is already running, or its lock is unavailable.\n");return false;
     }
     if(fchmod(lockFd,0600)!=0){std::fprintf(stderr,"Could not secure the daemon lock.\n");return false;}
+#endif
     // Only the lock holder may remove a stale socket from a previous crash.
     QLocalServer::removeServer(controlSocketPath()); server.setSocketOptions(QLocalServer::UserAccessOption);
     if (!server.listen(controlSocketPath())) { std::fprintf(stderr,"%s\n",qPrintable(server.errorString())); return false; }

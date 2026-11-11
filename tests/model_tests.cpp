@@ -13,6 +13,7 @@ static void require(bool passed, const char* message) {
 }
 int main(int argc,char** argv) {
     QCoreApplication app(argc,argv);
+#ifndef Q_OS_WIN
     const auto originalFlatpak=qgetenv("FLATPAK_ID");
     const bool hadFlatpak=qEnvironmentVariableIsSet("FLATPAK_ID");
     qunsetenv("FLATPAK_ID");
@@ -39,6 +40,7 @@ int main(int argc,char** argv) {
         if(hadRuntime)qputenv("XDG_RUNTIME_DIR",originalRuntime);else qunsetenv("XDG_RUNTIME_DIR");
     }
     if(hadFlatpak)qputenv("FLATPAK_ID",originalFlatpak);else qunsetenv("FLATPAK_ID");
+#endif
     murmur::Parameters base; base.gain=-7; base.bits=12;
     murmur::Parameters result=base;
     QString error;

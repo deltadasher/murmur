@@ -1,4 +1,8 @@
 #pragma once
+#ifdef MURMUR_WINDOWS_BACKEND
+#include "windows_engine.hpp"
+#else
+#pragma once
 #include "dsp.hpp"
 #include <QObject>
 #include <QString>
@@ -87,3 +91,5 @@ private:
     void fill(pw_stream*,AudioQueue&,bool primary);
     void releaseStreams();
 };
+
+#endif

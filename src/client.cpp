@@ -12,9 +12,17 @@ void launchDaemon(QObject* owner,std::function<void(bool)> callback) {
         if(!qEnvironmentVariable("FLATPAK_ID").isEmpty()) {
             // A separate copy of this sandbox outlives the controller. Never spawn on the host.
             process.setProgram(QStandardPaths::findExecutable("flatpak-spawn"));
-            process.setArguments({QCoreApplication::applicationDirPath()+"/murmur-daemon"});
+            process.setArguments({QCoreApplication::applicationDirPath()+"/murmur-daemon"
+#ifdef Q_OS_WIN
+                +".exe"
+#endif
+            });
         } else {
-            process.setProgram(QCoreApplication::applicationDirPath()+"/murmur-daemon");
+            process.setProgram(QCoreApplication::applicationDirPath()+"/murmur-daemon"
+#ifdef Q_OS_WIN
+                +".exe"
+#endif
+            );
             if (!QFileInfo::exists(process.program())) process.setProgram(QStandardPaths::findExecutable("murmur-daemon"));
         }
         const auto logDir=QStandardPaths::writableLocation(QStandardPaths::StateLocation)+"/murmur";

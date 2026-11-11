@@ -1,5 +1,6 @@
 #include "model.hpp"
 #include <QFile>
+#include <QCryptographicHash>
 #include <QJsonDocument>
 #include <QRegularExpression>
 #include <QSaveFile>
@@ -7,6 +8,11 @@
 #include <cmath>
 
 QString controlSocketPath() {
+#ifdef Q_OS_WIN
+    const auto user=qgetenv("USERNAME").toLower();
+    const auto hash=QCryptographicHash::hash(user,QCryptographicHash::Sha256).toHex().left(24);
+    return "murmur-"+QString::fromLatin1(hash);
+#else
     auto runtime=QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
     const auto flatpakId=qEnvironmentVariable("FLATPAK_ID");
     // Flatpak's shared app directory survives separate sandbox PID namespaces.
@@ -18,6 +24,7 @@ QString controlSocketPath() {
         if (!runtime.endsWith(suffix)) runtime+=suffix;
     }
     return runtime+"/murmur/control.sock";
+#endif
 }
 QStringList presetNames() { return {"Clean","Comms","Warm","Bright","Telephone","Digital grit","Deep"}; }
 murmur::Parameters presetParameters(const QString& name) {

@@ -8,6 +8,9 @@
 #include <QTimer>
 #include <QMap>
 #include <memory>
+#ifdef Q_OS_WIN
+#include <QLockFile>
+#endif
 
 class Daemon : public QObject {
     Q_OBJECT
@@ -19,7 +22,11 @@ public:
 private:
     QLocalServer server;
     BackgroundPortal background;
+#ifdef Q_OS_WIN
+    std::unique_ptr<QLockFile> lock;
+#else
     int lockFd=-1;
+#endif
     std::unique_ptr<Engine> engine;
     QList<QLocalSocket*> clients;
     QMap<uint32_t,QJsonObject> devices;

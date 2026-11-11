@@ -1,4 +1,19 @@
 #pragma once
+#include <QtGlobal>
+#ifdef Q_OS_WIN
+#include <QObject>
+class BackgroundPortal : public QObject {
+    Q_OBJECT
+public:
+    explicit BackgroundPortal(QObject* parent=nullptr,int=120000):QObject(parent) {}
+    QString state() const { return "not-required"; }
+    QString warning() const { return {}; }
+    void beginRequest() {}
+signals:
+    void changed();
+};
+#else
+#pragma once
 #include <QObject>
 #include <QDBusConnection>
 #include <QDBusMessage>
@@ -33,3 +48,5 @@ private:
     void disconnectResponse();
     void closeRequest();
 };
+
+#endif

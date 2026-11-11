@@ -1,0 +1,39 @@
+name: Windows build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125
+        with:
+          version: '6.8.3'
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: qtmultimedia
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DBUILD_TESTING=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+      - name: Tests
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Prepare portable build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build/Release/murmur.exe,build/Release/murmur-daemon.exe,LICENSE dist/
+          windeployqt --release dist/murmur.exe
+          windeployqt --release dist/murmur-daemon.exe
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: murmur-windows-experimental
+          path: dist/

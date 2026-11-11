@@ -11,6 +11,17 @@ Wayland and X11. Version **0.3.0** adds four effect sections and six controls.
 
 *Example mode: no microphone audio. Meter values in this screenshot are samples.*
 
+## Windows (experimental)
+
+Windows support is in development and has not yet been tested with a real microphone.
+It needs [VB-CABLE](https://vb-audio.com/Cable/) installed separately. After installing
+and rebooting, start Murmur, select your microphone, and choose **CABLE Output** as
+the input in Discord, OBS, or your game. Murmur sends audio to **CABLE Input**.
+Don't set the cable as your default speakers. Both your microphone and the cable
+need to support 48 kHz float audio. The Windows build is available as a GitHub
+Actions artifact when the Windows build succeeds. System mute control is not
+available on Windows.
+
 ## Start talking
 
 1. Open Murmur from your app launcher. Its service starts on demand.
