@@ -2,6 +2,10 @@
 
 Murmur lets you change how your microphone sounds in games, Discord, OBS, and other apps. It runs on Windows and Linux.
 
+**[Download Murmur for Windows](https://github.com/deltadasher/murmur/releases/download/windows-preview-0.3.0/murmur-windows-experimental.zip)** · [Install guide](INSTALL.md)
+
+Extract the ZIP and open `murmur.exe`. Keep the other files in the same folder.
+
 ![Murmur](docs/screenshots/voice-console.png)
 
 Pick your microphone, press **Start microphone**, and choose a preset. You can adjust tone, pitch, noise gate, compression, echo, and more. Close the window and the audio keeps running in the background. To stop it, press **Stop microphone** or use **Stop background service** in the menu.
